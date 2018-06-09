@@ -3,6 +3,7 @@ const solc = require('solc');
 const fs = require('fs');
 const ethabi = require('ethereumjs-abi');
 const commandLineArgs = require('command-line-args');
+const HDWalletProvider = require('truffle-hdwallet-provider');
 const async = require('async');
 
 const cli = [
@@ -19,6 +20,7 @@ function deploy(web3, compiledContract, args, gas, address, sendImmediately) {
   const abi = JSON.parse(compiledContract.interface);
   const bytecode = compiledContract.bytecode;
 
+
   if (args.length > 0) {
     const constructTypes = abi
       .filter(x => x.type === 'constructor')[0]
@@ -27,7 +29,8 @@ function deploy(web3, compiledContract, args, gas, address, sendImmediately) {
     console.log(`ABI encoded constructor arguments: ${abiEncoded.toString('hex')}`);
   }
 
-  const contract = web3.eth.contract(abi);
+  // const contract = web3.eth.contract(abi);
+  const contract = new web3.eth.contract(abi);
   const data = `0x${contract.new.getData.apply(null, args.concat({ data: bytecode }))}`;
   if (gas && address && sendImmediately) {
     web3.eth.sendTransaction({ from: address, gas, data }, (err, txHash) => {
@@ -39,6 +42,7 @@ function deploy(web3, compiledContract, args, gas, address, sendImmediately) {
           () => !contractAddress,
           (callback) => {
             web3.eth.getTransactionReceipt(txHash, (errReceipt, result) => {
+              console.log("result.contractAddress")
               if (result && result.contractAddress) contractAddress = result.contractAddress;
               setTimeout(() => {
                 callback(null);
@@ -65,11 +69,17 @@ if (cliOptions.help) {
 } else if (
   cliOptions.address && cliOptions.admin && cliOptions.feeAccount && cliOptions.accountLevelsAddr
 ) {
-  const web3 = new Web3();
-  web3.setProvider(new web3.providers.HttpProvider('http://localhost:8545'));
+  var mnemonic = 'mnemonec'
+  var accessToken = 'infura accesstoken';
+  const provider = new HDWalletProvider(
+       mnemonic,
+       "https://ropsten.infura.io/" + accessToken
+   );
+
+  const web3 = new Web3(provider);
 
   // Config
-  const solidityFile = './smart_contract/etherdelta.sol';
+  const solidityFile = './etherdelta.sol';
   const contractName = 'EtherDelta';
   const solcVersion = 'v0.4.9+commit.364da425';
   const address = cliOptions.address;
