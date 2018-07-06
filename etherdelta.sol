@@ -159,9 +159,13 @@ contract EtherDelta is SafeMath {
   mapping (address => mapping (bytes32 => bool)) public orders; //mapping of user accounts to mapping of order hashes to booleans (true = submitted by user, equivalent to offchain signature)
   mapping (address => mapping (bytes32 => uint)) public orderFills; //mapping of user accounts to mapping of order hashes to uints (amount of order that has been filled)
 
+  //注文発行
   event Order(address tokenGet, uint amountGet, address tokenGive, uint amountGive, uint expires, uint nonce, address user);
+  //注文キャンセル
   event Cancel(address tokenGet, uint amountGet, address tokenGive, uint amountGive, uint expires, uint nonce, address user, uint8 v, bytes32 r, bytes32 s);
+  //マッチしたらトレード実行
   event Trade(address tokenGet, uint amountGet, address tokenGive, uint amountGive, address get, address give);
+  //token address , userのアドレス, 
   event Deposit(address token, address user, uint amount, uint balance);
   event Withdraw(address token, address user, uint amount, uint balance);
 
@@ -242,7 +246,7 @@ contract EtherDelta is SafeMath {
   function balanceOf(address token, address user) constant returns (uint) {
     return tokens[token][user];
   }
-
+  // expires:注文期間
   function order(address tokenGet, uint amountGet, address tokenGive, uint amountGive, uint expires, uint nonce) {
     bytes32 hash = sha256(this, tokenGet, amountGet, tokenGive, amountGive, expires, nonce);
     orders[msg.sender][hash] = true;
